@@ -1,0 +1,17 @@
+# Local n8n for LendLoop. Start with: docker compose up -d   (UI: http://localhost:5678)
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=Asia/Bangkok
+      - TZ=Asia/Bangkok
+      # The workflows verify/sign HMACs in Code nodes, which needs crypto and env access.
+      - NODE_FUNCTION_ALLOW_BUILTIN=crypto
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - LENDLOOP_WEBHOOK_SECRET=${LENDLOOP_WEBHOOK_SECRET:?set LENDLOOP_WEBHOOK_SECRET in .env}
+      - CONVEX_SITE_URL=${CONVEX_SITE_URL:?set CONVEX_SITE_URL in .env}
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+    restart: unless-stopped

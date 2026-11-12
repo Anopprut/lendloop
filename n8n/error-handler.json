@@ -1,0 +1,45 @@
+{
+  "name": "LendLoop - Error handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        200
+      ],
+      "id": "error-trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Make failures visible: logs workflow, node and message. Extend with an Email/Slack node for alerts.\nconst e = $input.first().json;\nconst text = '[LendLoop ERROR] workflow=' + (e.workflow && e.workflow.name) + ' node=' + (e.execution && e.execution.lastNodeExecuted) + ' message=' + (e.execution && e.execution.error && e.execution.error.message);\nconsole.error(text);\nreturn [{ json: { alert: text } }];"
+      },
+      "name": "Log failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        200
+      ],
+      "id": "log-failure"
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

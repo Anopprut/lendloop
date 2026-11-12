@@ -1,0 +1,175 @@
+{
+  "name": "LendLoop - Loan notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lendloop-loan-event",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        200
+      ],
+      "id": "webhook",
+      "webhookId": "lendloop-loan-event"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verify the HMAC signature that Convex puts on every webhook call.\nconst crypto = require('crypto');\nconst item = $input.first();\nconst headers = item.json.headers || {};\nconst ts = headers['x-lendloop-timestamp'];\nconst sig = headers['x-lendloop-signature'];\nconst secret = $env.LENDLOOP_WEBHOOK_SECRET;\n\n// Raw body is kept as binary so the signature is checked on the exact bytes that were sent.\nconst rawBuffer = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst raw = rawBuffer.toString('utf8');\n\nlet valid = false;\nif (secret && ts && sig && Math.abs(Date.now() / 1000 - Number(ts)) <= 300) {\n  const path = '/webhook/lendloop-loan-event';\n  const expected = crypto.createHmac('sha256', secret).update(ts + '.POST.' + path + '.' + raw).digest('hex');\n  const a = Buffer.from(expected);\n  const b = Buffer.from(String(sig));\n  valid = a.length === b.length && crypto.timingSafeEqual(a, b);\n}\nreturn [{ json: { valid, payload: valid ? JSON.parse(raw) : null } }];"
+      },
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        200
+      ],
+      "id": "verify-signature"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "name": "Signature valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        200
+      ],
+      "id": "signature-valid-"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mock notification: logs the message. Swap for an Email/Slack/Discord node in production.\nconst p = $input.first().json.payload;\nconst subject = {\n  request_created: 'New borrow request for your ' + p.toolName,\n  approved: 'Your request for ' + p.toolName + ' was approved',\n  declined: 'Your request for ' + p.toolName + ' was declined',\n  returned: p.toolName + ' was marked as returned',\n}[p.event] || ('Update on ' + p.toolName);\nconst message = 'To: ' + p.recipientEmail + '\\nSubject: ' + subject + '\\nDates: ' + p.startDate + ' to ' + p.endDate;\nconsole.log('[LendLoop notification]\\n' + message);\nreturn [{ json: { sent: true, message } }];"
+      },
+      "name": "Compose notification (mock)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        100
+      ],
+      "id": "compose-notification-mock-",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        100
+      ],
+      "id": "respond-200"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { error: 'unauthorized' } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "name": "Respond 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        320
+      ],
+      "id": "respond-401"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify signature": {
+      "main": [
+        [
+          {
+            "node": "Signature valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signature valid?": {
+      "main": [
+        [
+          {
+            "node": "Compose notification (mock)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose notification (mock)": {
+      "main": [
+        [
+          {
+            "node": "Respond 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

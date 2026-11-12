@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.env
+.env.*
+!.env.example
+convex/_generated/
+*.tsbuildinfo
+next-env.d.ts
+n8n_data/
