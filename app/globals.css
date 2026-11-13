@@ -52,3 +52,23 @@ section h3 { padding-bottom:8px; border-bottom:1px solid var(--line); }
 .cards > li .row { border-top:1px dashed var(--line); padding-top:10px; margin-top:12px; }
 .cards > li.row { border-top:1px solid #cfd7e3; padding-top:12px; margin-top:0; }
 .tabs { border:1px solid #cfd7e3; }
+
+/* Draggable cards */
+.cards > li { position: relative; transition: box-shadow .15s, transform .15s, opacity .15s; }
+.cards > li .handle { position:absolute; top:8px; right:10px; color:#9aa6b6; cursor:grab; user-select:none; font-size:18px; line-height:1; padding:2px 4px; border-radius:6px; }
+.cards > li .handle:hover { color: var(--accent); background: var(--accent-soft); }
+.cards > li .handle:active { cursor: grabbing; }
+.cards > li.dragging { opacity:.45; transform: scale(.98); }
+.cards > li.over { outline: 2px dashed var(--accent); outline-offset: 3px; background: var(--accent-soft); }
+
+/* Entrance: cards rise in one after another */
+@keyframes rise { from { opacity:0; transform: translateY(18px) scale(.96); } to { opacity:1; transform:none; } }
+.cards > li { animation: rise .45s cubic-bezier(.2,.9,.3,1.2) both; }
+.cards > li:nth-child(2) { animation-delay: .05s; } .cards > li:nth-child(3) { animation-delay: .10s; }
+.cards > li:nth-child(4) { animation-delay: .15s; } .cards > li:nth-child(5) { animation-delay: .20s; }
+.cards > li:nth-child(n+6) { animation-delay: .25s; }
+.cards > li.dragging { transform: rotate(2deg) scale(.97); }
+.tabs button.active { transition: background .25s, color .25s; }
+@media (prefers-reduced-motion: reduce) { html:not([data-motion="on"]) .cards > li { animation: none; } }
+html[data-motion="off"] .cards > li { animation: none; }
+.motion { float:right; display:inline-flex; gap:6px; align-items:center; font-size:14px; color:var(--muted); background:var(--card); border:1px solid #cfd7e3; border-radius:12px; padding:8px 14px; cursor:pointer; }

@@ -5,6 +5,7 @@ import { SignInButton } from "@clerk/nextjs";
 import { Authenticated, AuthLoading, Unauthenticated, useAction as useConvexAction, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { MotionToggle, useSortable } from "./sortable";
 
 const CATEGORIES = ["power tools", "garden", "kitchen", "camping", "other"];
 const CONDITIONS = ["new", "good", "fair", "worn"];
@@ -72,6 +73,7 @@ function DashboardInner() {
 
   return (
     <>
+      <MotionToggle />
       <p className="muted userbar">
         Signed in as <b>{me.name}</b> ({me.role}
         {me.trustedLender ? ", trusted lender" : ""})
@@ -98,7 +100,8 @@ function ErrorLine({ error }: { error: string | null }) {
 
 function ToolsTab() {
   const [category, setCategory] = useState("");
-  const tools = useQuery(api.tools.list, category ? { category } : {});
+  const rawTools = useQuery(api.tools.list, category ? { category } : {});
+  const { ordered: tools, cardProps, handleProps } = useSortable("tools", rawTools);
   const request = useMutation(api.loans.request);
   const [dates, setDates] = useState<Record<string, { start: string; end: string }>>({});
   const { error, run } = useAction();
@@ -123,7 +126,8 @@ function ToolsTab() {
         {tools?.map((t) => {
           const d = dates[t._id] ?? { start: "", end: "" };
           return (
-            <li key={t._id}>
+            <li key={t._id} {...cardProps(t._id)}>
+              <span {...handleProps(t._id)}>⠿</span>
               <b>{t.name}</b> <span className="pill">{t.category}</span>{" "}
               <span className={`pill ${t.availability === "available" ? "ok" : "warn"}`}>{t.availability}</span>
               <div className="muted">
@@ -189,7 +193,8 @@ function ToolForm(props: {
 }
 
 function ListingsTab() {
-  const listings = useQuery(api.tools.myListings);
+  const rawListings = useQuery(api.tools.myListings);
+  const { ordered: listings, cardProps, handleProps } = useSortable("listings", rawListings);
   const create = useMutation(api.tools.create);
   const update = useMutation(api.tools.update);
   const remove = useMutation(api.tools.remove);
@@ -205,7 +210,8 @@ function ListingsTab() {
       {listings?.length === 0 && <p className="muted">You have not listed anything yet.</p>}
       <ul className="cards">
         {listings?.map((t) => (
-          <li key={t._id}>
+          <li key={t._id} {...cardProps(t._id)}>
+            <span {...handleProps(t._id)}>⠿</span>
             {editing === t._id ? (
               <ToolForm
                 initial={{ name: t.name, category: t.category, condition: t.condition, description: t.description }}
@@ -238,7 +244,8 @@ function ListingsTab() {
 function LoanList({ kind }: { kind: "requests" | "incoming" }) {
   const mine = useQuery(api.loans.myRequests, kind === "requests" ? {} : "skip");
   const incoming = useQuery(api.loans.incoming, kind === "incoming" ? {} : "skip");
-  const loans = kind === "requests" ? mine : incoming;
+  const rawLoans = kind === "requests" ? mine : incoming;
+  const { ordered: loans, cardProps, handleProps } = useSortable(kind, rawLoans);
   const decide = useMutation(api.loans.decide);
   const markReturned = useMutation(api.loans.markReturned);
   const { error, run } = useAction();
@@ -250,7 +257,8 @@ function LoanList({ kind }: { kind: "requests" | "incoming" }) {
       {loans?.length === 0 && <p className="muted">Nothing here yet.</p>}
       <ul className="cards">
         {loans?.map((l) => (
-          <li key={l._id}>
+          <li key={l._id} {...cardProps(l._id)}>
+            <span {...handleProps(l._id)}>⠿</span>
             <b>{l.toolName}</b> <span className={`pill ${l.overdue ? "warn" : l.status === "approved" || l.status === "returned" ? "ok" : l.status === "declined" ? "bad" : ""}`}>{l.overdue ? "overdue" : l.status}</span>
             <div className="muted">
               {l.startDate} → {l.endDate} · {kind === "requests" ? `lender: ${l.lenderName}` : `borrower: ${l.borrowerName}`}
