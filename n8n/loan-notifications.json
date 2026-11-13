@@ -170,6 +170,9 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
-  }
+    "executionOrder": "v1",
+    "errorWorkflow": "sgLzhjhzWctyuc54"
+  },
+  "active": false,
+  "id": "exetVqd2NSpHKKNj"
 }

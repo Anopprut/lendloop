@@ -52,7 +52,7 @@ Prerequisites: Node 22+, Docker, a free [Clerk](https://clerk.com) application a
 1. **Install:** `npm install`
 2. **Convex:** run `npx convex dev` and follow the prompts. It creates the deployment, writes `NEXT_PUBLIC_CONVEX_URL` to `.env.local` and generates `convex/_generated`.
 3. **Clerk:** create an application, copy the publishable and secret keys into `.env.local`, then activate the **Convex integration** in the Clerk dashboard. Copy the Clerk Frontend API URL.
-4. **Convex environment variables** (dashboard, Settings, Environment Variables, or `npx convex env set NAME value`): `CLERK_JWT_ISSUER_DOMAIN`, `ADMIN_EMAILS`, `N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET` (see `.env.example`).
+4. **Convex environment variables** (dashboard, Settings, Environment Variables, or `npx convex env set NAME value`): `CLERK_JWT_ISSUER_DOMAIN`, `CLERK_SECRET_KEY` (used server-side to look up the user email and name), `ADMIN_EMAILS`, `N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET` (see `.env.example`).
 5. **n8n:** create `.env` next to `docker-compose.yml` with `LENDLOOP_WEBHOOK_SECRET` (same value as `N8N_WEBHOOK_SECRET`) and `CONVEX_SITE_URL` (the `.convex.site` URL), then `docker compose up -d` and open http://localhost:5678.
    - Import the three files in `n8n/`.
    - In **Loan notifications**, open the workflow settings and set **Error workflow** to *LendLoop - Error handler*. Do the same for *Overdue reminders*. Then activate both workflows (the production webhook path is `/webhook/lendloop-loan-event`).

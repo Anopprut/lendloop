@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { SignInButton } from "@clerk/nextjs";
-import { Authenticated, AuthLoading, Unauthenticated, useMutation, useQuery } from "convex/react";
+import { Authenticated, AuthLoading, Unauthenticated, useAction as useConvexAction, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 
@@ -13,10 +13,11 @@ type Tab = "tools" | "listings" | "requests" | "incoming" | "admin";
 
 function useAction() {
   const [error, setError] = useState<string | null>(null);
-  const run = async (fn: () => Promise<unknown>) => {
+  const run = async (fn: () => Promise<unknown>, onDone?: () => void) => {
     setError(null);
     try {
       await fn();
+      onDone?.();
     } catch (e) {
       // Convex wraps server errors; show the readable tail.
       const msg = e instanceof Error ? e.message : String(e);
@@ -50,7 +51,7 @@ export default function Dashboard() {
 }
 
 function DashboardInner() {
-  const store = useMutation(api.users.store);
+  const store = useConvexAction(api.users.sync);
   const me = useQuery(api.users.me);
   const [tab, setTab] = useState<Tab>("tools");
 
@@ -101,9 +102,11 @@ function ToolsTab() {
   const request = useMutation(api.loans.request);
   const [dates, setDates] = useState<Record<string, { start: string; end: string }>>({});
   const { error, run } = useAction();
+  const [sent, setSent] = useState<string | null>(null);
 
   return (
     <section>
+      {sent && <p className="muted" role="status">Request sent for {sent}. Track it under My requests.</p>}
       <label>
         Category{" "}
         <select value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -133,7 +136,7 @@ function ToolsTab() {
                   className="row"
                   onSubmit={(e) => {
                     e.preventDefault();
-                    void run(() => request({ toolId: t._id, startDate: d.start, endDate: d.end }));
+                    void run(() => request({ toolId: t._id, startDate: d.start, endDate: d.end }), () => setSent(t.name));
                   }}
                 >
                   <input type="date" required value={d.start} onChange={(e) => setDates({ ...dates, [t._id]: { ...d, start: e.target.value } })} />

@@ -53,6 +53,11 @@ export const request = mutation({
       throw new Error("The tool is already booked for those dates");
     }
 
+    const mine = await ctx.db.query("loans").withIndex("by_borrower", (q) => q.eq("borrowerId", me._id)).collect();
+    if (mine.some((l) => l.toolId === toolId && l.status === "requested" && l.startDate === startDate && l.endDate === endDate)) {
+      throw new Error("You already requested this tool for those dates");
+    }
+
     const loanId = await ctx.db.insert("loans", {
       toolId,
       borrowerId: me._id,
