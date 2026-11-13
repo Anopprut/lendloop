@@ -31,6 +31,7 @@ export default function Home() {
         </div>
       </header>
 
+      <section>
       <h2>Available tools</h2>
       {tools === undefined && <p>Loading…</p>}
       {tools?.length === 0 && <p className="muted">No tools listed yet.</p>}
@@ -41,6 +42,7 @@ export default function Home() {
           </li>
         ))}
       </ul>
+      </section>
     </main>
   );
 }

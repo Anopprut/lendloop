@@ -4,6 +4,12 @@ A neighborhood tool-lending board with automated workflows. Neighbors list tools
 
 **Stack:** Next.js (App Router) · TypeScript · Clerk (auth) · Convex (database, server functions, HTTP endpoints) · n8n (automation, self-hosted with Docker)
 
+## Screenshot
+
+Incoming requests for a lender: the approved loan shows its automation log (`notify:request_created` and `notify:approved`, both `sent` by the n8n workflow).
+
+![Dashboard, incoming requests](docs/dashboard-incoming.png)
+
 ## What it does
 - **Public page:** company name, tagline, a read-only list of tools (name and category only, from Convex, no owner details) and a "Sign in to lend or borrow" button (Clerk).
 - **Signed-in users:** list, edit and delete their own tools; request a tool for a date range; approve or decline incoming requests; mark a loan as returned. Views: All tools (filter by category, shows availability), My listings, My requests, Incoming requests.

@@ -72,7 +72,7 @@ function DashboardInner() {
 
   return (
     <>
-      <p className="muted">
+      <p className="muted userbar">
         Signed in as <b>{me.name}</b> ({me.role}
         {me.trustedLender ? ", trusted lender" : ""})
       </p>
@@ -251,7 +251,7 @@ function LoanList({ kind }: { kind: "requests" | "incoming" }) {
       <ul className="cards">
         {loans?.map((l) => (
           <li key={l._id}>
-            <b>{l.toolName}</b> <span className={`pill ${l.overdue ? "warn" : ""}`}>{l.overdue ? "overdue" : l.status}</span>
+            <b>{l.toolName}</b> <span className={`pill ${l.overdue ? "warn" : l.status === "approved" || l.status === "returned" ? "ok" : l.status === "declined" ? "bad" : ""}`}>{l.overdue ? "overdue" : l.status}</span>
             <div className="muted">
               {l.startDate} → {l.endDate} · {kind === "requests" ? `lender: ${l.lenderName}` : `borrower: ${l.borrowerName}`}
             </div>
@@ -329,7 +329,7 @@ function AdminTab() {
       <ul className="cards">
         {loans?.map((l) => (
           <li key={l._id}>
-            <b>{l.toolName}</b> <span className="pill">{l.overdue ? "overdue" : l.status}</span>
+            <b>{l.toolName}</b> <span className={`pill ${l.overdue ? "warn" : l.status === "approved" || l.status === "returned" ? "ok" : l.status === "declined" ? "bad" : ""}`}>{l.overdue ? "overdue" : l.status}</span>
             <div className="muted">
               {l.borrowerName} ← {l.lenderName} · {l.startDate} → {l.endDate}
             </div>
